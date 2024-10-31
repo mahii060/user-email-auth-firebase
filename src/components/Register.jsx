@@ -1,4 +1,4 @@
-import { createUserWithEmailAndPassword } from "firebase/auth";
+import { createUserWithEmailAndPassword, sendEmailVerification, updateProfile } from "firebase/auth";
 import auth from "../firebase/firebase.config";
 import { useState } from "react";
 import { FaEye, FaEyeSlash } from "react-icons/fa6";
@@ -13,10 +13,11 @@ const Register = () => {
 
     const handleForm = (e) => {
         e.preventDefault()
+        const name = e.target.name.value;
         const email = e.target.email.value;
         const password = e.target.password.value;
         const accepted = e.target.terms.checked;
-        console.log(email, password, accepted);
+        // console.log(name, email, password, accepted);
 
         // Reset error 
         setRegisterError('');
@@ -45,7 +46,27 @@ const Register = () => {
             .then(result => {
                 const user = result.user;
                 setSuccess('User Registered Successfully.')
-                console.log(result, user);
+
+                // Update profile
+                updateProfile(user, {
+                    displayName: name,
+                    photoURL: 'https://www.facebook.com/photo/?fbid=113654281810616&set=a.113654295143948',
+                })
+                    .then(() => { console.log('Profile updated successfully!'); })
+                    .catch(error => {
+                        console.log(error);
+                    })
+                console.log(user);
+
+                // Send verification mail
+                sendEmailVerification(auth.currentUser)
+                    .then(() => {
+                        console.log(auth.currentUser);
+                        alert('Please check your email and verify your account')
+                    })
+                    .catch(error => {
+                        console.log(error);
+                    })
             })
             .catch(error => {
                 setRegisterError(error.message)
@@ -57,6 +78,7 @@ const Register = () => {
             <div className="mx-auto md:w-1/2">
                 <h2 className="text-3xl mb-4">Please Register</h2>
                 <form onSubmit={handleForm}>
+                    <input className="w-full border border-black mb-2 py-2 px-4" type="text" name="name" id="name" placeholder="Name" required />
                     <input className="w-full border border-black mb-2 py-2 px-4" type="email" name="email" id="email" placeholder="Email" required />
                     <br />
                     <div className="relative mb-2">
